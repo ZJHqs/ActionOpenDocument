@@ -1,22 +1,20 @@
 package com.yll.actionopendocument
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.edit
 import androidx.core.net.toUri
 
-private const val OPEN_DOCUMENT_REQUEST_CODE = 0x33
 private const val TAG = "MainActivity"
 private const val LAST_OPENED_URI_KEY =
     "com.example.android.actionopendocument.pref.LAST_OPENED_URI_KEY"
@@ -68,24 +66,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-
-        Log.d(TAG, "onActivityResult: requestCode = $requestCode")
-
-        if (requestCode == OPEN_DOCUMENT_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-
-
-
-            data?.data?.also { documentUri ->
-                contentResolver.takePersistableUriPermission(
-                    documentUri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-                openDocument(documentUri)
-            }
-        }
+    private val launcherActivity = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        it.resultCode
+        it.data
     }
 
     private fun openDocumentPicker() {
@@ -93,7 +78,8 @@ class MainActivity : AppCompatActivity() {
             type = "application/pdf"
             addCategory(Intent.CATEGORY_OPENABLE)
         }
-        startActivityForResult(intent, OPEN_DOCUMENT_REQUEST_CODE)
+
+        launcherActivity.launch(intent)
     }
 
     private fun openDocument(documentUri: Uri) {
