@@ -87,7 +87,8 @@ class MainActivity : AppCompatActivity() {
             putString(LAST_OPENED_URI_KEY, documentUri.toString())
         }
 
-        val fragment = ActionOpenDocumentFragment.newInstance(documentUri)
+//        val fragment = ActionOpenDocumentFragment.newInstance(documentUri)
+        val fragment = MyFragment.newInstance(documentUri)
         supportFragmentManager.beginTransaction()
             .add(R.id.container, fragment, DOCUMENT_FRAGMENT_TAG)
             .commit()
