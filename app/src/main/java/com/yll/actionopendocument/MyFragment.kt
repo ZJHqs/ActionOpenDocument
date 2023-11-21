@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import androidx.core.net.toUri
+import androidx.lifecycle.Observer
 import java.io.IOException
 
 private const val TAG = "MyFragment"
@@ -44,6 +45,8 @@ class MyFragment : Fragment() {
 
         viewModel = ViewModelProvider(this)[MyViewModel::class.java]
 
+
+
         return inflater.inflate(R.layout.fragment_my, container, false)
     }
 
@@ -53,26 +56,23 @@ class MyFragment : Fragment() {
         pdfPageView = view.findViewById(R.id.image)
         previousButton = view.findViewById<Button>(R.id.previous).apply {
             setOnClickListener {
-                Log.d(TAG, "previousButton: currentPageNumber = ${viewModel.currentPageNumber}")
-                pdfPageView.setImageBitmap(viewModel.loadPage(viewModel.currentPageNumber - 1))
-                setState()
+                viewModel.updateNumber(-1)
             }
         }
         nextButton = view.findViewById<Button>(R.id.next).apply {
             setOnClickListener {
-                Log.d(TAG, "nextButton: currentPageNumber = ${viewModel.currentPageNumber}")
-                pdfPageView.setImageBitmap(viewModel.loadPage(viewModel.currentPageNumber + 1))
-                setState()
+                viewModel.updateNumber(1)
             }
         }
-    }
 
-    private fun setState() {
-        previousButton.isEnabled = (viewModel.currentPageNumber != 0)
-        nextButton.isEnabled = (viewModel.currentPageNumber + 1 < viewModel.pageCount)
-        activity?.title = getString(R.string.app_name_with_index, viewModel.currentPageNumber + 1, viewModel.pageCount)
-    }
+        viewModel.currentPageNumber.observe(viewLifecycleOwner) { currentPageNumber ->
+            pdfPageView.setImageBitmap(viewModel.loadPage(currentPageNumber))
+            previousButton.isEnabled = (currentPageNumber != 0)
+            nextButton.isEnabled = (currentPageNumber + 1 < viewModel.pageCount)
+            activity?.title = getString(R.string.app_name_with_index, currentPageNumber + 1, viewModel.pageCount)
+        }
 
+    }
 
     override fun onStart() {
         super.onStart()
@@ -81,8 +81,6 @@ class MyFragment : Fragment() {
 
         try {
             viewModel.openRenderer(activity, documentUri)
-            pdfPageView.setImageBitmap(viewModel.loadPage(viewModel.currentPageNumber))
-            setState()
         } catch (e: IOException) {
             Log.e(TAG, "onStart: Exception opening document", e)
         }
